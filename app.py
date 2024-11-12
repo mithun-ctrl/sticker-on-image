@@ -15,7 +15,7 @@ async def add_sticker_to_image(message: Message, sticker_id: str):
     image = await message.download()
     
     # Get the sticker from the Telegram API
-    sticker = await app.get_sticker(sticker_id)
+    sticker = await app.download_media(sticker_id)
     
     # Add the sticker to the image
     await app.add_sticker_to_photo(image, sticker.file_id)
