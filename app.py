@@ -1,5 +1,5 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram.types import InputMediaPhoto, InputFile, Message
 import os
 
 # Set up the Pyrogram client
@@ -14,14 +14,15 @@ async def add_sticker_to_image(message: Message, sticker_id: str):
     # Download the user's image
     image = await message.download()
     
-    # Get the sticker from the Telegram API
+    # Download the sticker
     sticker = await app.download_media(sticker_id)
     
-    # Add the sticker to the image
-    await app.add_sticker_to_photo(image, sticker.file_id)
+    # Create an InputMediaPhoto with the sticker overlaid
+    media = InputMediaPhoto(media=InputFile(image), file_attach_name="image_with_sticker.png")
+    media.sticker = InputFile(sticker)
     
     # Send the modified image back to the user
-    await message.reply_photo(image)
+    await message.edit_media(media)
 
 # Handle incoming image messages
 @app.on_message(filters.photo)
