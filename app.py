@@ -6,6 +6,7 @@ import os
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+STICKER_ID = os.getenv("STICKER_ID")
 
 app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
@@ -21,7 +22,7 @@ async def add_sticker_to_message(message: Message, sticker_id: str):
 @app.on_message(filters.text)
 async def handle_text(_, message: Message):
     # Add a sticker to the message
-    await add_sticker_to_message(message, "CAACAgQAAxkBAAEHgLhjXTg4fQX7OOqh4Gfxx3NzGwABlgAC8wADXvCIHdJKJCVwMGVMHwQ")
+    await add_sticker_to_message(message, STICKER_ID)
 
 if __name__ == "__main__":
     app.run()
