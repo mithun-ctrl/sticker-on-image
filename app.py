@@ -23,9 +23,9 @@ class StickerBot:
         self.application.add_handler(CommandHandler("start", self.start_command))
         self.application.add_handler(CommandHandler("help", self.help_command))
         
-        # Message handlers
-        self.application.add_handler(MessageHandler(filters.STICKER, self.handle_sticker))
-        self.application.add_handler(MessageHandler(filters.ANIMATION, self.handle_animation))
+        # Message handlers - Fixed filters syntax
+        self.application.add_handler(MessageHandler(filters.Sticker.ALL, self.handle_sticker))
+        self.application.add_handler(MessageHandler(filters.Animation.ALL, self.handle_animation))
         
         # Error handler
         self.application.add_error_handler(self.error_handler)
