@@ -1,34 +1,62 @@
-from pyrogram import Client, filters
-from pyrogram.types import InputMediaPhoto, InputFile, Message
 import os
+from dotenv import load_dotenv
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+import logging
 
 # Set up the Pyrogram client
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+# Enable logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
-app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    welcome_message = (
+        "👋 Welcome to the Sticker ID Bot!\n\n"
+        "Just send me any sticker and I'll tell you its ID and details."
+    )
+    await update.message.reply_text(welcome_message)
 
-# Define a function to add a sticker to an image
-async def add_sticker_to_image(message: Message, sticker_id: str):
-    # Download the user's image
-    image = await message.download()
+async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    sticker = update.message.sticker
     
-    # Download the sticker
-    sticker = await app.download_media(sticker_id)
+    info_message = (
+        "🎯 Sticker Information:\n\n"
+        f"📋 File ID:\n`{sticker.file_id}`\n\n"
+        f"🆔 File Unique ID:\n`{sticker.file_unique_id}`\n\n"
+        f"📦 Set Name:\n`{sticker.set_name if sticker.set_name else 'Not part of a set'}`\n\n"
+        f"😀 Emoji: {sticker.emoji if sticker.emoji else 'No emoji'}"
+    )
     
-    # Create an InputMediaPhoto with the sticker overlaid
-    media = InputMediaPhoto(media=InputFile(image), file_attach_name="image_with_sticker.png")
-    media.sticker = InputFile(sticker)
+    try:
+        await update.message.reply_text(info_message, parse_mode='Markdown')
+    except Exception as e:
+        logger.error(f"Error sending sticker info: {e}")
+        await update.message.reply_text("Sorry, there was an error. Please try again.")
+
+def main():
+    # Load environment variables
+    load_dotenv()
     
-    # Send the modified image back to the user
-    await message.edit_media(media)
+    # Get bot token from environment variable
+    bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+    if not bot_token:
+        raise ValueError("No bot token found in environment variables!")
+    
+    # Create application
+    application = Application.builder().token(bot_token).build()
+    
+    # Add handlers
+    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(MessageHandler(filters.Sticker.ALL, handle_sticker))
+    
+    # Start bot
+    logger.info("Starting bot...")
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-# Handle incoming image messages
-@app.on_message(filters.photo)
-async def handle_photo(_, message: Message):
-    # Add a sticker to the image
-    await add_sticker_to_image(message, "CAACAgUAAxkBAAOiZzOa1iLzvrUf6qKJIFyB2bQMZ1EAAmMPAAJ7VoBVav_8h5kAAXANNgQ")
-
-if __name__ == "__main__":
-    app.run()
+if __name__ == '__main__':
+    main()
